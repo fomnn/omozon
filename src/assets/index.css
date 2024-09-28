@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.add-something-form input,
+.add-something-form select,
+.add-something-form textarea {
+  @apply border rounded-sm px-2 py-1 bg-zinc-50 dark:bg-zinc-800 shadow-sm
+}
+
+.table-data th,
+.table-data td {
+  @apply border
+}
