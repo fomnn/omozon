@@ -35,6 +35,7 @@ export default function DashboardNav() {
   useEffect(() => {
     const darkmode = localStorage.getItem('darkmode')
     if (darkmode === 'true') {
+      setDarkmode(true)
       document.documentElement.classList.add('dark')
     }
   }, [])
