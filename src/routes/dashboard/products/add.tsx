@@ -4,6 +4,7 @@ import { useCreateProduct } from '@/services/products-service'
 import { useGetAllSuppliers } from '@/services/suppliers-service'
 import { useGetAllTags } from '@/services/tags-service'
 import { Icon } from '@iconify/react'
+import { Box, Card, Flex, Text } from '@radix-ui/themes'
 import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
@@ -38,7 +39,7 @@ function AddProduct() {
   const { data: shippingMethods } = useGetAllPaymentMethods()
   const { data: suppliers } = useGetAllSuppliers()
   const { data: tags } = useGetAllTags()
-  const { mutate: createProduct } = useCreateProduct()
+  const { mutate: createProduct, isPending, error } = useCreateProduct()
   const [product, setProduct] = useState<ProductsAdd>({
     name: '',
     longDesc: '',
@@ -226,7 +227,27 @@ function AddProduct() {
     }
   }
 
+  function validateBeforeSubmit() {
+    if (!product.name) {
+      // eslint-disable-next-line no-alert
+      alert('Product name is required')
+      return false
+    }
+
+    if (!product.categoryIds[0]) {
+      // eslint-disable-next-line no-alert
+      alert('Category is required')
+      return false
+    }
+
+    return true
+  }
+
   function handleSubmit() {
+    if (!validateBeforeSubmit()) {
+      return
+    }
+
     createProduct({
       product: {
         name: product.name,
@@ -244,9 +265,12 @@ function AddProduct() {
         price: Number.parseInt(v.price),
         discounted_price: Number.parseInt(v.discounted_price),
       })),
-    })
-    navigate({
-      to: '/dashboard/products',
+    }, {
+      onSuccess: () => {
+        navigate({
+          to: '/dashboard/products',
+        })
+      },
     })
   }
 
@@ -512,7 +536,7 @@ function AddProduct() {
               accept=".jpg, .jpeg, .png"
               name="images"
               onChange={e => AddVariantImages(e.target.files)}
-              multiple
+              multiple={false}
             />
           </div>
           {
@@ -528,11 +552,12 @@ function AddProduct() {
                             src={image}
                             alt=""
                             className="aspect-square overflow-hidden object-cover rounded-sm"
+                            // eslint-disable-next-line react/no-array-index-key
                             key={i}
                           />
                         ))}
                       {/* <button type="button" className="w-full aspect-square bg-slate-300 rounded-sm flex items-center justify-center"> */}
-                      <button
+                      {/* <button
                         type="button"
                         className="w-full aspect-square"
                         onClick={() => appendImageRef.current?.click()}
@@ -551,7 +576,7 @@ function AddProduct() {
                         name="images"
                         onChange={e => appendVariantImages(e.target.files)}
                         multiple
-                      />
+                      /> */}
                     </div>
                   </div>
                 )
@@ -652,12 +677,53 @@ function AddProduct() {
         <div className="py-6">
           <button
             type="submit"
-            className="bg-zinc-800 text-white w-full py-2 rounded-sm"
+            className="bg-zinc-800 text-white w-full py-2 rounded-sm text-center"
+            disabled={isPending}
           >
-            Create Product
+            {isPending
+              ? (
+                  <div className="flex justify-center">
+                    <Icon icon="eos-icons:loading" />
+                  </div>
+                )
+              : 'Create Product'}
           </button>
         </div>
       </form>
+      {isPending && (
+        <Box maxWidth="240px" className="absolute bottom-10 bg-white right-10 rounded-xl">
+          <Card>
+            <Flex gap="3" align="center">
+              <Icon icon="eos-icons:loading" className="text-3xl" />
+              <Box>
+                <Text as="div" size="2" weight="bold">
+                  Loading
+                </Text>
+                <Text as="div" size="2" color="gray">
+                  Adding Product
+                </Text>
+              </Box>
+            </Flex>
+          </Card>
+        </Box>
+      )}
+      {error && (
+        <Box maxWidth="240px" className="absolute bottom-10 bg-white right-10 rounded-xl">
+          <Card>
+            <Flex gap="3" align="center">
+              <Icon icon="eos-icons:loadingmaterial-symbols:error-circle-rounded-outline-sharp" className="text-3xl" />
+              <Box>
+                <Text as="div" size="2" weight="bold">
+                  Error
+                </Text>
+                <Text as="div" size="2" color="gray">
+                  {error.stack?.includes('Product name already exists') ? 'Product name already exists' : 'Something went wrong'}
+                </Text>
+              </Box>
+            </Flex>
+          </Card>
+        </Box>
+      )}
     </div>
   )
 }
